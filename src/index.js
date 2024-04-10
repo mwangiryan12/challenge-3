@@ -1,82 +1,101 @@
 
-//write your code here
-// Define the URL of the API endpoint
-let url = 'https://api.npoint.io/f8d1be198a18712d3f29/films/';
-const listHolder = document.getElementById('films');
-
-document.addEventListener('DOMContentLoaded',() => {
-    //Remove the placeholder list item
-    document.querySelector('.film.item').remove();
-    fetchMovies(url);
- });
-
-// Function to fetch movies data from the API
-function fetchMovies(url) {
-    fetch(url)
-        .then(response => {
-            if (!response.ok){
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(movies => {
-            movies.forEach(movie => {
-                displayMovie(movie);
-            });
-        })
-        .catch(error => {
-            console.error('Error fetching movies :', error);
-        })
+// Your code here
+let movie = "https://api-vik-server.onrender.com/films"// shows the localhost used
+//uses dom to declare function
+document.addEventListener('DOMContentLoaded', async(event)=>{
+const data = await showFilms()
+viewPoster(data)
+movieTitle(data)
+calculateTickets()
+})
+ticketsFilm()
+//function to get movie titles
+function showFilms(){
+    return fetch(movie,{
+        method:"GET",
+        headers:{
+            "Content-Type":"application/json",
+            "Accept":"application/json"
+        }
+    })
+    .then(res =>res.json())
+    .then(data => data)
 }
 
-// Function to display individual movie titles in the list
-function displayMovie(movie) {
-    const li = document.createElement('li');
-    li.style.cursor = "pointer";
-    li.textContent = movie.title.toUpperCase();
-    listHolder.appendChild(li);
-    addClickEvent(li , movie.id); // Pass the movie ID to addClickEvent
+const ul = document.getElementById("films")
+function ticketsFilm(){
+    return fetch(movie)
+    .then(res =>res.json())
+    .then(title => title.map(movies =>{
+        let li =document.createElement("li");
+        li.innerHTML=`
+        <div>
+        <h2 id="${movies.id}" class="photos">${movies.title}</h2>
+        </div>
+        `
+        ul.appendChild(li)
+    }))
 }
 
-// Function to handle click events on movie titles
-function addClickEvent(li,movieId) {
-    li.addEventListener('click', () => {
-        fetch(`${url}/${movieId}`)
-            .then(res =>{
-                if (!res.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return res.json();
-            })
-            .then(movie => {
-                document.getElementById('buy-ticket').textContent = 'Buy Ticket';
-                setUpMovieDetails(movie);
-            })
-            .catch(error => {('Error fetching movie details:', error);
-             });
+function movieTitle(data){
+    const titles = document.getElementById("showing")
+    const display=document.querySelectorAll(".photos")
+    display.forEach(action =>{
+        action.addEventListener("click", (event)=>{
+            const watch = data.find((element)=> element.id===event.target.id)
+            titles.innerHTML=`
+            <div class="card">
+            <div id="title" class="title">${watch.title}</div>
+            <div id="runtime" class="meta">${watch.runtime} minutes</div>
+            <div class="content">
+              <div class="description">
+                <div id="film-info">${watch.description}</div>
+                <span id="showtime" class="ui label">${watch.showtime}</span>
+                <span id="ticket-num">${watch.capacity-watch.tickets_sold}remaining tickets</span>
+              </div>
+            </div>
+            <div class="extra content">
+              <button id="buy-ticket" class="ui orange button" onclick="buyTicket(-1)">
+                Buy Ticket
+              </button>
+            </div>
+            </div>
+        
+            `
+            
+        })
+    })
 
-                });
-                 }
-// Function to display movie details
-function setUpMovieDetails(childMovie) {
-    const preview = document.getElementById('poster');
-    preview.src = childMovie.poster;
-
-    document.getElementById('title').textContent = childMovie.title;
-    document.getElementById('runtime').textContent = `${childMovie.runtime} minutes`;
-    document.getElementById('film-info').textContent = childMovie.description;
-    document.getElementById('showtime').textContent = childMovie.showtime;
-    document.getElementById('ticket-num').textContent = childMovie.capacity - childMovie.tickets_sold;
 }
 
-// Add event listener to the 'Buy Ticket' button
-const btn = document.getElementById('buy-ticket');
-btn.addEventListener('click', function(e) {
-    let remTickets = parseInt(document.querySelector('#ticket-num').textContent,10);
-    e.preventDefault();
-    if (remTickets > 0) {
-        document.querySelector('#ticket-num').textContent = remTickets -1;
-    }else {
-        btn.textContent = 'Sold Out';
+function viewPoster(data){
+    const live = document.querySelector('#live')
+    const cont = document.createElement('div')
+   const image = document.querySelectorAll(".photos")
+   image.forEach(posters =>{
+    posters.addEventListener('click',(event)=>{
+      const Acquiredfilm = data.find((element)=>element.id === event.target.id)
+      cont.innerHTML =`
+      <img src=${Acquiredfilm.poster}>`
+      live.appendChild(cont)
+
+    })
+   })
+  }
+   function buyTicket(buy){
+    const grey = document.getElementById("buy-ticket")
+    const number = document.getElementById("ticket-num")
+    const newNumber= parseInt(number.innerHTML)
+    number.innerHTML=newNumber
+    if(newNumber> 1){
+        number.innerHTML = newNumber + buy + 'remaining tickets'
     }
-});
+    else{
+        number.textContent='sold out'
+        grey.disabled = true
+    }
+
+   }
+
+
+  
